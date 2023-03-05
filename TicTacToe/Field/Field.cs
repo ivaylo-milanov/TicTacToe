@@ -71,9 +71,8 @@
             {
                 this.x = newX;
                 this.y = newY;
+                SetCursorPosition(newY, newX);
             }
-
-            SetCursorPosition(newY, newX);
         }
 
         public void SetOnRandomCell()
@@ -84,10 +83,7 @@
             {
                 for (int j = 1; j < this.cols - 1; j += 2)
                 {
-                    if (this.field[i, j] == " ")
-                    {
-                        cells.Add((i, j));
-                    }
+                    if (this.field[i, j] == " ") cells.Add((i, j));
                 }
             }
 

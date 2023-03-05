@@ -2,6 +2,6 @@
 {
     public interface IGame
     {
-        void Start();
+        void Start(bool started = false);
     }
 }

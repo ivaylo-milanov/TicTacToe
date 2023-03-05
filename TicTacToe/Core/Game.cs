@@ -8,17 +8,11 @@
     public class Game : IGame
     {
         private IField field = null!;
-        string player1 = null!;
-        string player2 = null!;
-        private bool isStarted = false;
 
-        public void Start()
+        public void Start(bool started = false)
         {
-            Clear();
-            if (!this.isStarted)
-                DisplayIntro();
+            if (!started) DisplayIntro();
 
-            ChoosePlayer();
             ReadyGame();
             GameLoop();
         }
@@ -32,47 +26,49 @@
             }
         }
 
-        private void KeyPressed(ConsoleKey key)
+        private void Move(ConsoleKey key)
         {
             switch (key)
             {
-                case ConsoleKey.LeftArrow:
+                case ConsoleKey.A:
                     this.field.Update(0, -2);
                     break;
-                case ConsoleKey.UpArrow:
+                case ConsoleKey.W:
                     this.field.Update(-2, 0);
                     break;
-                case ConsoleKey.RightArrow:
+                case ConsoleKey.D:
                     this.field.Update(0, 2);
                     break;
-                case ConsoleKey.DownArrow:
+                case ConsoleKey.S:
                     this.field.Update(2, 0);
-                    break;
-                case ConsoleKey.Enter:
-                    Turn(this.player1);
-                    break;
-                case ConsoleKey.R:
-                    Start();
-                    break;
-                case ConsoleKey.D1:
-                    this.player1 = "X";
-                    this.player2 = "O";
-                    break;
-                case ConsoleKey.D2:
-                    this.player1 = "O";
-                    this.player2 = "X";
                     break;
             }
         }
 
         private void PlayerMove()
         {
-            ConsoleKey key = default(ConsoleKey);
-            while (key != ConsoleKey.Enter)
+            ConsoleKey key = default;
+            while (key != ConsoleKey.Spacebar)
             {
                 key = GetKey();
-                KeyPressed(key);
+                Move(key);
             }
+            Turn("X");
+        }
+
+        private void WaitForKey(ConsoleKey certainKey)
+        {
+            ConsoleKey key = default;
+            do
+            {
+                key = GetKey();
+            } while (key != certainKey);
+        }
+
+        private void ComputerMove()
+        {
+            this.field.SetOnRandomCell();
+            Turn("O");
         }
 
         private ConsoleKey GetKey()
@@ -86,29 +82,21 @@
         private void Turn(string symbol)
         {
             bool isWinning = this.field.DrawSymbol(symbol);
-
             if (isWinning) DisplayOutro(symbol);
-        }
-
-        private void ComputerMove()
-        {
-            this.field.SetOnRandomCell();
-            Turn(this.player2);
         }
 
         private void DisplayIntro()
         {
-            WriteLine("This is TicTacToe Game by Ivaylo Milanov");
-            WriteLine("Enter - Draw symbol");
-            WriteLine("Up Arrow - move up");
-            WriteLine("Down Arrow - move down");
-            WriteLine("Left Arrow - move left");
-            WriteLine("Right Arrow - move right");
-            WriteLine("R - restart the game");
-            WriteLine("Press ENTER to start the game");
-
-            WaitUntilCertainKeyIsPressed(ConsoleKey.Enter);
             Clear();
+            WriteLine("This is TicTacToe Game by Ivaylo Milanov");
+            WriteLine("Spacebar - Draw symbol");
+            WriteLine("W - move up");
+            WriteLine("S - move down");
+            WriteLine("A - move left");
+            WriteLine("D - move right");
+            WriteLine("R - restart the game");
+            WriteLine("F - start the game");
+            WaitForKey(ConsoleKey.F);
         }
 
         private void DisplayOutro(string winner)
@@ -116,33 +104,14 @@
             Clear();
             WriteLine($"The winner is {winner}");
             WriteLine("Press R to restart the game");
-            WaitUntilCertainKeyIsPressed(ConsoleKey.R);
-            Start();
-        }
-
-        private void WaitUntilCertainKeyIsPressed(ConsoleKey certainKey)
-        {
-            ConsoleKey key;
-            do
-            {
-                key = GetKey();
-            } while (key != certainKey);
+            WaitForKey(ConsoleKey.R);
+            Start(true);
         }
 
         private void ReadyGame()
         {
-            this.isStarted = true;
-            this.field = new Field();
-        }
-
-        private void ChoosePlayer()
-        {
-            WriteLine("Press 1 for X");
-            WriteLine("Press 2 for O");
-
-            ConsoleKey key = GetKey();
-            KeyPressed(key);
             Clear();
+            this.field = new Field();
         }
     }
 }
