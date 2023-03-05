@@ -2,104 +2,99 @@
 {
     using static System.Console;
     using Contracts;
+    using Parser;
 
     public class Field : IField
     {
         private string[,] field;
         private int rows;
         private int cols;
+        private int x = 1;
+        private int y = 1;
 
-        public Field(string[,] field)
+        public Field()
         {
-            this.field = field;
-            rows = field.GetLength(0);
-            cols = field.GetLength(1);
+            this.field = FieldParser.GetField("../../../Field/Parser/FieldFile.txt");
+            this.rows = field.GetLength(0);
+            this.cols = field.GetLength(1);
+            DrawEmptyField();
         }
 
-        public int Rows
+        private void DrawEmptyField()
         {
-            get 
+            for (int i = 0; i < this.rows; i++)
             {
-                return rows;
-            }
-        }
-
-        public int Cols
-        {
-            get 
-            { 
-                return cols;
-            }
-        }
-
-        public void DrawEmptyField()
-        {
-            for (int i = 0; i < Rows; i++)
-            {
-                for (int j = 0; j < Cols; j++)
+                for (int j = 0; j < this.cols; j++)
                 {
                     SetCursorPosition(j, i);
                     Write(this.field[i, j]);
                 }
             }
+
+            SetCursorPosition(this.x, this.y);
         }
 
-        public bool IsWalkable(int newX, int newY)
+        private bool IsWalkable(int newX, int newY) =>
+            newX >= 1 && newX < this.rows - 1 &&
+            newY >= 1 && newY < this.cols - 1;
+
+        private void Add(string symbol) => this.field[this.x, this.y] = symbol;
+        
+        private bool IsWinning(string symbol) =>
+            (this.field[1, 1] == symbol && this.field[1, 3] == symbol && this.field[1, 5] == symbol) ||
+            (this.field[3, 1] == symbol && this.field[3, 3] == symbol && this.field[3, 5] == symbol) ||
+            (this.field[5, 1] == symbol && this.field[5, 3] == symbol && this.field[5, 5] == symbol) ||
+            (this.field[1, 1] == symbol && this.field[3, 1] == symbol && this.field[5, 1] == symbol) ||
+            (this.field[1, 3] == symbol && this.field[3, 3] == symbol && this.field[5, 3] == symbol) ||
+            (this.field[1, 5] == symbol && this.field[3, 5] == symbol && this.field[5, 5] == symbol) ||
+            (this.field[1, 1] == symbol && this.field[3, 3] == symbol && this.field[5, 5] == symbol) ||
+            (this.field[1, 5] == symbol && this.field[3, 3] == symbol && this.field[5, 1] == symbol);
+
+        public bool DrawSymbol(string symbol)
         {
-            return newX >= 0 && newX < Rows
-                && newY >= 0 && newY < Cols;
+            string currSymbol = this.field[this.x, this.y];
+            if (currSymbol == "X" || currSymbol == "O") return false;
+            
+            Write(symbol);
+            Add(symbol);
+            SetCursorPosition(this.y, this.x);
+
+            return this.IsWinning(symbol);
         }
 
-        public void Add(int x, int y, string symbol)
+        public void Update(int x, int y)
         {
-            this.field[x, y] = symbol;
-        }
+            int newX = x + this.x;
+            int newY = y + this.y;
 
-        public bool IsWinning(string symbol)
-        {
-            for ( int i = 1; i < Rows - 1; i += 2)
+            if (IsWalkable(newX, newY))
             {
-                if (this.field[i, 1] == symbol && this.field[i, 3] == symbol && this.field[i, 5] == symbol)
+                this.x = newX;
+                this.y = newY;
+            }
+
+            SetCursorPosition(newY, newX);
+        }
+
+        public void SetOnRandomCell()
+        {
+            Random random = new Random();
+            List<(int x, int y)> cells = new List<(int x, int y)>();
+            for (int i = 1; i < this.rows - 1; i += 2)
+            {
+                for (int j = 1; j < this.cols - 1; j += 2)
                 {
-                    return true;
+                    if (this.field[i, j] == " ")
+                    {
+                        cells.Add((i, j));
+                    }
                 }
             }
 
-            for (int i = 1; i < Cols - 1; i += 2)
-            {
-                if (this.field[1, i] == symbol && this.field[3, i] == symbol && this.field[5, i] == symbol)
-                {
-                    return true;
-                }
-            }
+            int index = random.Next(0, cells.Count);
 
-            if (this.field[1, 1] == symbol && this.field[3, 3] == symbol && this.field[5, 5] == symbol)
-            {
-                return true;
-            }
-
-            if (this.field[1, 5] == symbol && this.field[3, 3] == symbol && this.field[5, 1] == symbol)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        public string GetElementAt(int x, int y)
-        {
-            return this.field[x, y];
-        }
-
-        public void Clear()
-        {
-            for (int i = 1; i < Rows - 1; i += 2)
-            {
-                for (int j = 1; j < Cols - 1; j += 2)
-                {
-                    this.field[i, j] = " ";
-                }
-            }
+            (this.x, this.y) = cells[index];
+            SetCursorPosition(this.y, this.x);
         }
     }
 }

@@ -1,100 +1,77 @@
 ﻿namespace TicTacToe.Core
 {
     using static System.Console;
-    using Players;
-    using Players.Contracts;
     using Field;
     using Field.Contracts;
-    using Parser;
     using Contracts;
-    
+
     public class Game : IGame
     {
-        private IField field;
-        private IPlayer playerOne;
-        private IPlayer playerTwo;
-        private IPlayer curPlayer;
-        private int x;
-        private int y;
-        private int index = 0;
-        private bool isWinning;
+        private IField field = null!;
+        string player1 = null!;
+        string player2 = null!;
+        private bool isStarted = false;
 
         public void Start()
         {
-            string[,] grid = FieldParser.GetField("../../../Field/Parser/FieldFile.txt");
-            this.field = new Field(grid);
-            DisplayIntro();
-
-            GameLoop();
             Clear();
+            if (!this.isStarted)
+                DisplayIntro();
 
-            DisplayOutro();
+            ChoosePlayer();
+            ReadyGame();
+            GameLoop();
         }
 
         private void GameLoop()
         {
-            this.index = -1;
             while (true)
             {
-                KeyPressed();
-                
-                if (this.isWinning)
-                {
-                    break;
-                }
+                PlayerMove();
+                ComputerMove();
             }
         }
 
-        private void Move(ConsoleKey key)
+        private void KeyPressed(ConsoleKey key)
         {
             switch (key)
             {
                 case ConsoleKey.LeftArrow:
-                    if (this.field.IsWalkable(this.x, this.y - 2))
-                    {
-                        this.y -= 2;
-                    }
+                    this.field.Update(0, -2);
                     break;
                 case ConsoleKey.UpArrow:
-                    if (this.field.IsWalkable(this.x - 2, this.y))
-                    {
-                        this.x -= 2;
-                    }
+                    this.field.Update(-2, 0);
                     break;
                 case ConsoleKey.RightArrow:
-                    if (this.field.IsWalkable(this.x, this.y + 2))
-                    {
-                        this.y += 2;
-                    }
+                    this.field.Update(0, 2);
                     break;
                 case ConsoleKey.DownArrow:
-                    if (this.field.IsWalkable(this.x + 2, this.y))
-                    {
-                        this.x += 2;
-                    }
+                    this.field.Update(2, 0);
+                    break;
+                case ConsoleKey.Enter:
+                    Turn(this.player1);
+                    break;
+                case ConsoleKey.R:
+                    Start();
+                    break;
+                case ConsoleKey.D1:
+                    this.player1 = "X";
+                    this.player2 = "O";
+                    break;
+                case ConsoleKey.D2:
+                    this.player1 = "O";
+                    this.player2 = "X";
                     break;
             }
-
-            SetCursorPosition(this.y, this.x);
         }
 
-        private void KeyPressed()
+        private void PlayerMove()
         {
-            ConsoleKey key = GetKey();
-            
-            if (key == ConsoleKey.Enter)
+            ConsoleKey key = default(ConsoleKey);
+            while (key != ConsoleKey.Enter)
             {
-                Turn();
-                this.index++;
-            }
-            else if (key == ConsoleKey.R)
-            {
-                this.field.Clear();
-                ReadyGame();
-            }
-            else
-            {
-                Move(key);
+                key = GetKey();
+                KeyPressed(key);
             }
         }
 
@@ -106,33 +83,17 @@
             return key;
         }
 
-        private void Turn()
+        private void Turn(string symbol)
         {
-            this.curPlayer = this.index % 2 == 0 ? this.playerOne : this.playerTwo;
-            string symbol = this.field.GetElementAt(this.x, this.y);
-            if (symbol == "O" || symbol == "X")
-            {
-                return;
-            }
+            bool isWinning = this.field.DrawSymbol(symbol);
 
-            this.curPlayer.DrawSymbol();
-            this.field.Add(this.x, this.y, this.curPlayer.GetSymbol());
-
-            if (this.field.IsWinning(this.curPlayer.GetSymbol()))
-            {
-                this.isWinning = true;
-            }
+            if (isWinning) DisplayOutro(symbol);
         }
 
-        private void ReadyGame()
+        private void ComputerMove()
         {
-            this.playerOne = new PlayerOne();
-            this.playerTwo = new PlayerTwo();
-            this.x = 1;
-            this.y = 1;
-            this.field.DrawEmptyField();
-            SetCursorPosition(this.y, this.x);
-            this.isWinning = false;
+            this.field.SetOnRandomCell();
+            Turn(this.player2);
         }
 
         private void DisplayIntro()
@@ -146,26 +107,42 @@
             WriteLine("R - restart the game");
             WriteLine("Press ENTER to start the game");
 
-            ConsoleKey key = GetKey();
-
-            if (key == ConsoleKey.Enter)
-            {
-                ReadyGame();
-            }
+            WaitUntilCertainKeyIsPressed(ConsoleKey.Enter);
+            Clear();
         }
 
-        private void DisplayOutro()
+        private void DisplayOutro(string winner)
         {
-            WriteLine($"The winner is {curPlayer.GetSymbol()}");
+            Clear();
+            WriteLine($"The winner is {winner}");
             WriteLine("Press R to restart the game");
-            ConsoleKey key = GetKey();
+            WaitUntilCertainKeyIsPressed(ConsoleKey.R);
+            Start();
+        }
 
-            if (key == ConsoleKey.R)
+        private void WaitUntilCertainKeyIsPressed(ConsoleKey certainKey)
+        {
+            ConsoleKey key;
+            do
             {
-                Clear();
-                ReadyGame();
-                Start();
-            }
+                key = GetKey();
+            } while (key != certainKey);
+        }
+
+        private void ReadyGame()
+        {
+            this.isStarted = true;
+            this.field = new Field();
+        }
+
+        private void ChoosePlayer()
+        {
+            WriteLine("Press 1 for X");
+            WriteLine("Press 2 for O");
+
+            ConsoleKey key = GetKey();
+            KeyPressed(key);
+            Clear();
         }
     }
 }
