@@ -48,9 +48,10 @@
         private void PlayerMove()
         {
             ConsoleKey key = default;
-            while (key != ConsoleKey.Spacebar)
+            while (true)
             {
                 key = GetKey();
+                if (key == ConsoleKey.Spacebar) break;
                 Move(key);
             }
             Turn("X");
@@ -58,11 +59,9 @@
 
         private void WaitForKey(ConsoleKey certainKey)
         {
-            ConsoleKey key = default;
-            do
+            while (GetKey() != certainKey)
             {
-                key = GetKey();
-            } while (key != certainKey);
+            }
         }
 
         private void ComputerMove()
@@ -71,13 +70,7 @@
             Turn("O");
         }
 
-        private ConsoleKey GetKey()
-        {
-            ConsoleKeyInfo keyInfo = ReadKey(true);
-            ConsoleKey key = keyInfo.Key;
-
-            return key;
-        }
+        private ConsoleKey GetKey() => ReadKey(true).Key;
 
         private void Turn(string symbol)
         {
