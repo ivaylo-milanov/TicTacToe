@@ -17,10 +17,9 @@
             this.field = FieldParser.GetField("../../../Field/Parser/FieldFile.txt");
             this.rows = field.GetLength(0);
             this.cols = field.GetLength(1);
-            DrawEmptyField();
         }
 
-        private void DrawEmptyField()
+        public void DrawEmptyField()
         {
             for (int i = 0; i < this.rows; i++)
             {

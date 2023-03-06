@@ -9,5 +9,7 @@
         void Update(int x, int y);
 
         void SetOnRandomCell();
+
+        void DrawEmptyField();
     }
 }
